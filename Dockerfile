@@ -9,10 +9,12 @@ RUN tar xzvf spire-1.2.2-linux-x86_64-glibc.tar.gz -C /bin --strip=2 spire-1.2.2
 FROM go as build
 WORKDIR /build
 COPY go.mod go.sum ./
-COPY ./pkg/internal/imports ./pkg/internal/imports
-RUN go build ./pkg/internal/imports
+#COPY ./pkg/internal/imports ./pkg/internal/imports
+#RUN go build ./pkg/internal/imports
+ADD vendor vendor
 COPY . .
-RUN go build -o /bin/cmd-registry-k8s .
+RUN go env -w GOPRIVATE=github.com/kubeslice && \
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -mod=vendor -a -o /bin/cmd-registry-k8s .
 
 FROM build as test
 CMD go test -test.v ./...
