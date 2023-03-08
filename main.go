@@ -32,6 +32,7 @@ import (
 
 	"github.com/networkservicemesh/sdk-k8s/pkg/registry/chains/registryk8s"
 	"github.com/networkservicemesh/sdk-k8s/pkg/tools/k8s"
+	"github.com/networkservicemesh/sdk-k8s/pkg/tools/k8s/client/clientset/versioned"
 	"github.com/networkservicemesh/sdk/pkg/tools/opentelemetry"
 	"github.com/networkservicemesh/sdk/pkg/tools/tracing"
 
@@ -55,6 +56,7 @@ type Config struct {
 	ListenOn              []url.URL `default:"unix:///listen.on.socket" desc:"url to listen on." split_words:"true"`
 	LogLevel              string    `default:"INFO" desc:"Log level" split_words:"true"`
 	OpenTelemetryEndpoint string    `default:"otel-collector.observability.svc.cluster.local:4317" desc:"OpenTelemetry Collector Endpoint"`
+	KubeletQPS             int           `default:"10" desc:"kubelet config settings" split_words:"true"`
 }
 
 func main() {
@@ -143,7 +145,9 @@ func main() {
 			),
 		),
 	)
-	client, _, _ := k8s.NewVersionedClient()
+
+	// Adjust config and create ClietSet
+	client, _ := newVersionedClient(config)
 
 	config.ClientSet = client
 	config.ChainCtx = ctx
@@ -173,3 +177,11 @@ func exitOnErr(ctx context.Context, cancel context.CancelFunc, errCh <-chan erro
 		cancel()
 	}(ctx, errCh)
 }
+
+func newVersionedClient(config *Config) (*versioned.Clientset, error) {
+	k8sConfig, _ := k8s.NewClientSetConfig()
+	k8sConfig.QPS = float32(config.KubeletQPS)
+	k8sConfig.Burst = config.KubeletQPS * 2
+	return versioned.NewForConfig(k8sConfig)
+}
+
