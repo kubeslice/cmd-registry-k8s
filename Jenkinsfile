@@ -5,5 +5,6 @@ dockerImagePipeline(
   dockerfiles: ['Dockerfile'],
   buildArgumentsList: [
     [ENV: 'production', PLATFORM: 'linux/arm64,linux/amd64']
-]  
+]
+  
 )
