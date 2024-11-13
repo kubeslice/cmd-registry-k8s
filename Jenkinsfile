@@ -1,9 +1,11 @@
-@Library('jenkins-library@opensource-release') _
+@Library('jenkins-library@opensource-release-multiarch') _
 dockerImagePipeline(
   script: this,
-  service: 'cmd-registry-k8s',
-  dockerfile: 'Dockerfile',
-  buildContext: '.',
-  buildArguments: [PLATFORM:"amd64"]
+  services: ['cmd-registry-k8s'],
+  dockerfiles: ['Dockerfile'],
+  pushed: true,
+  buildArgumentsList: [
+    [ENV: 'production', PLATFORM: 'linux/arm64,linux/amd64']
+]
   
 )
